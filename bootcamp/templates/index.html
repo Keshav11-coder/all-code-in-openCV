@@ -1,0 +1,180 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>SkyDash</title>
+		<meta charset="utf-8">
+
+		<!-- leaflet css  -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.3.1/dist/leaflet.js"></script>
+		<link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='style/style.css') }}">
+		<script src="{{ url_for('static',filename='js/script.js') }}"></script>
+	</head>
+	<body>
+		<div class="topnav" style="position: relative; width: 896px; height: 48px; left: 640px;">
+			<a class="active" href="#home">Home</a>
+			<a href="#news">News</a>
+			<a href="#contact">Contact</a>
+			<a href="#about">About</a>
+		</div>
+				<!-- Add your Video Feed here to show behind controller FullScreen GB or Windowed -->
+		<div class="video-background" style = "position: fixed; bottom: 600px">
+		  <div >
+		    <iframe src="{{ url_for('stream') }}"  title="Camera Feed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen ></iframe>
+		  </div>
+		  		<!-- Add your Geo Map view here to show behind controller can be toggled FullScreen GB or Windowed -->
+			<div id="map" class="video-background"  ></div>
+		</div>
+
+
+		<!-- Add your important Flight Information/guages here TO DO-->
+
+		<!-- Add your JoyStick controllers here for flight control -->
+    <div class="content">
+			<div class="row">
+				<div class="card-grid">
+					<div> <!-- class="card"-->
+						<div class="state" id="joy1Div" style="position: fixed; bottom: 5px; right: 290px;  width:200px;height:200px;margin:50px"></div>
+							<!--<div class="state" style="position: fixed; top: 290px; right: 70px;">-->
+								<!--Pos X/Y: <span id="joy1XY"></span></br>-->
+								<!--DIR    : <span id="joy1DIR"></span></br>-->
+							</div>
+					</div>
+					<div> <!-- class="card"-->
+						<div id="joy2Div"  style = "position: fixed; left: 290px; bottom: 5px;"></div>
+							<!--<div class="state" style="position: fixed; top: 290px; left: 70px;">-->
+								<!--Pos X/Y: <span id="joy2XY"></span></br>-->
+								<!--DIR    : <span id="joy2DIR"></span></br>-->
+							</div>
+						</div>
+					<!--</div>-->
+				</div>
+			</div></br>
+			<!-- Add your other control/monitoring guages here -->
+			<div> <!-- class="card-grid"-->
+        <!--<div class="card">
+            <p class="card-title"> Fader (P12) </p>
+            <p class="switch">
+                <input type="range" onchange="updateSliderPWM(this)" id="slider1" min="0" max="100" step="1" value ="0" class="slider">
+            </p>
+            <p class="state">Brightness: <span id="sliderValue1"></span> &percnt;</p>
+        </div>
+        <div class="card">
+            <p class="card-title"> Plow Speed (P13)</p>
+            <p class="switch">
+                <input type="range" onchange="updateSliderPWM(this)" id="slider2" min="0" max="100" step="1" value ="0" class="slider">
+            </p>
+            <p class="state">Speed: <span id="sliderValue2"></span> &percnt;</p>
+        </div>
+        <div class="card">
+            <p class="card-title"> Cutter (P14)</p>
+            <p class="switch">
+                <input type="range" onchange="updateSliderPWM(this)" id="slider3" min="0" max="100" step="1" value ="0" class="slider">
+            </p>
+            <p class="state">RPM: <span id="sliderValue3"></span> &percnt;</p>
+        </div>-->
+   	 	</div>
+		</div>
+
+	<script type="text/javascript">
+		// XY Dir guages to update
+		var joy1XY = document.getElementById("joy1XY");
+		var joy1DIR= document.getElementById("joy1DIR");
+		var joy2XY = document.getElementById("joy2XY");
+		var joy2DIR = document.getElementById("joy2DIR");
+
+		// JoyStick1 Params
+		var joy1Param = { "title": "joystick2",
+			"internalFillColor" : "#034078" ,
+		  "internalLineWidth" : 2 ,
+		  "internalStrokeColor" : "#003300",
+		  "externalLineWidth" : 2 ,
+		  "externalStrokeColor" : "#008000"};
+
+		// Create JoyStick object into the DIV 'joy1Div'
+		var Joy1 = new JoyStick('joy1Div', joy1Param, function(stickData) {
+			// Update on event
+			// Send XY over the socket
+
+	    joy1XY.innerHTML= stickData.xPosition.toString() + " / " + stickData.yPosition.toString();
+	    joy1DIR.innerHTML = stickData.cardinalDirection;
+		});
+
+		// JoyStick2 Params
+		var joy2Param = { "title": "joystick2", "autoReturnToCenter": true,
+			"internalFillColor" :"#034078" ,
+		  "internalLineWidth" : 2 ,
+		  "internalStrokeColor" : "#003300",
+		  "externalLineWidth" : 2 ,
+		  "externalStrokeColor" : "#008000"};
+
+		// Create JoyStick object into the DIV 'joy2Div'
+		var Joy2 = new JoyStick('joy2Div', joy2Param);
+		// update Joy2 via a timer
+		setInterval(function(){ joy2XY.innerHTML = Joy2.GetPosX().toString() + " / " + Joy2.GetPosY().toString(); }, 100);
+		setInterval(function(){ joy2DIR.innerHTML = Joy2.GetDir(); }, 100);
+	</script>
+
+	<!-- MAP here leaflet js  -->
+<script>
+    // Leaflet Map initialization
+
+    var map = L.map('map').setView([5.8294387,-55.2040759], 17);
+    
+    // Add an OpenStreetMap tile layer
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+    
+    // Add the Street View buttons in the top left corner
+    // (Please get your own Client ID on https://www.mapillary.com/app/settings/developers)
+    L.streetView({ position: 'topleft', mapillaryId: 'RC1ZRTBfaVlhWmJmUGVqRk5CYnAxQTpmMGE3OTU0MzM0MTljZTA4' }).addTo(map);
+    
+    // Add a marker to the centre of the map
+    var marker = L.marker(map.getCenter()).addTo(map);
+    
+    // Make sure the marker stays in the centre when the map is moved
+    map.on('move', function() { marker.setLatLng(map.getCenter()); });
+
+
+    // //osm layer
+    // var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    //     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    // });
+    // osm.addTo(map);
+
+    if(!navigator.geolocation) {
+        console.log("Your browser doesn't support geolocation feature!")
+    } else {
+        setInterval(() => {
+            navigator.geolocation.getCurrentPosition(getPosition)
+        }, 10000);
+    }
+
+    var marker, circle;
+
+    function getPosition(position){
+        // console.log(position)
+        var lat = position.coords.latitude
+        var long = position.coords.longitude
+        var accuracy = position.coords.accuracy
+
+        if(marker) {
+            map.removeLayer(marker)
+        }
+
+        if(circle) {
+            map.removeLayer(circle)
+        }
+
+        marker = L.marker([lat, long])
+        circle = L.circle([lat, long], {radius: accuracy})
+
+        var featureGroup = L.featureGroup([marker, circle]).addTo(map)
+
+        map.fitBounds(featureGroup.getBounds())
+
+        console.log("Your coordinate is: Lat: "+ lat +" Long: "+ long+ " Accuracy: "+ accuracy)
+    }
+
+</script>
+</body>
+</html>
